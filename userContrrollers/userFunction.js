@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const User = require("../Module/user_Modul");
+const Store = require("../Module/store_Module");
 const mongoose = require('mongoose');
 
 
@@ -56,19 +57,47 @@ const registerUser = asyncHandler(async (req, res) => {
     return token;
   }
 
-  const signin= asyncHandler(async(req,res) => {
+  const signin = asyncHandler(async (req, res) => {
     const { Email, Password } = req.body;
-    console.log(Email );
-   
     const userExists = await User.findOne({ Email });
-    if(userExists && (await bcrypt.compare(Password, userExists.Password)) ) {
-        console.log("user Find");
+    console.log(Email);
+    if (userExists && (await bcrypt.compare(Password, userExists.Password))) {
+      console.log(userExists.userType);
+      if (userExists.userType === "shopKeeper") {
+        const storeExists = await Store.findOne({ Email });
+        
+        if (storeExists) {
+          console.log("signIn as a Shopkeeper");
+          res.json({
+            token: generateToken(userExists._id),
+            userType: userExists.userType,
+            Email: userExists.Email,
+            Status: storeExists.Status,
+            StoreExist: true,
+          });
+        } else {
+          console.log("Shopkeeper exists but store is not registered yet");
+          res.json({
+            token: generateToken(userExists._id),
+            userType: userExists.userType,
+            Email: userExists.Email,
+            Status: false,
+            StoreExist: false,
+          });
+        }
+      } else {
+        console.log("User is not a shopkeeper");
         res.json({
           token: generateToken(userExists._id),
           userType: userExists.userType,
+          Email: userExists.Email,
+          Status: false,
+          StoreExist: false,
         });
+      }
+    } else {
+      // Handle invalid credentials
     }
-    else{}
-  })
-
+  });
+  
   module.exports= {registerUser,signin}

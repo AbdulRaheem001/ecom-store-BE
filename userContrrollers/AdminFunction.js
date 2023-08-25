@@ -1,33 +1,37 @@
 
-const Product = require("../Module/product_Module");
-const asyncHandler = require("express-async-handler");
-const addProduct = async (req, res) => {
-  try {
-    const newProduct = new Product({
-      name: req.body.name,
-      description: req.body.description,
-      stock: req.body.stock,
-      actualPrice: req.body.actualPrice,
-      discountPrice: req.body.discountPrice,
-      discountPercentage: req.body.discountPercentage,
-      image: req.file.buffer,
-    });
-    console.log(newProduct);
-    const savedProduct = await newProduct.save();
-    res.status(201).json(savedProduct);
-    console.log("hi");
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-    console.log("by");
-  }
-};
 
-const getProduct= async (req,res)=>{
+const Store = require("../Module/store_Module");
+
+const getStore= async (req,res)=>{
+  console.log("Welcon to Admin")
   try {
-  const products = await Product.find(); // Retrieve all products from the database
-    res.json(products);
+  const storeData = await Store.find(); // Retrieve all products from the database
+  
+    res.json(storeData);
   } catch (error) {
     res.status(500).json({ message: "Error fetching products" });
   }
 }
-module.exports= {addProduct,getProduct}
+const updateStatus = async (req, res) => {
+  const { _id } = req.body;
+console.log(_id);
+  try {
+    // Find the store by ID and update its status
+    const updatedStore = await Store.findByIdAndUpdate(
+      _id,
+      { Status: true }, // Change this to the new status value
+      { new: true } // This option returns the updated document
+    );
+
+    if (!updatedStore) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+
+    res.status(200).json({ message: "Store status updated successfully" });
+  } catch (error) {
+    console.error("Error updating store status:", error);
+    res.status(500).json({ message: "An error occurred while updating store status" });
+  }
+};
+
+module.exports= {getStore,updateStatus}
